@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPDC-2 Exam Portal | Professional CBT</title>
+    <style>
+        :root {
+            --primary: #000000;
+            --secondary: #ffffff;
+            --accent: #333333;
+            --bg: #f4f7f6;
+            --border: #cccccc;
+            --success: #27ae60;
+            --danger: #c0392b;
+            --text: #2c3e50;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
+
+        body { background-color: var(--bg); color: var(--text); line-height: 1.6; }
+
+        /* Login Screen */
+        #login-screen {
+            display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px;
+        }
+        .login-card {
+            background: white; padding: 40px; border: 2px solid var(--primary);
+            width: 100%; max-width: 500px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .dev-credit { font-size: 11px; color: #888; margin-top: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        
+        input[type="text"] {
+            width: 100%; padding: 12px; margin: 15px 0; border: 1px solid var(--border); font-size: 16px;
+        }
+        .btn {
+            padding: 12px 24px; cursor: pointer; border: none; font-weight: bold; transition: 0.3s;
+        }
+        .btn-black { background: var(--primary); color: white; width: 100%; }
+        .btn-black:hover { background: var(--accent); }
+
+        /* Exam Interface */
+        #exam-screen { display: none; height: 100vh; flex-direction: column; }
+        
+        header {
+            background: var(--primary); color: white; padding: 10px 30px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 3px solid #444;
+        }
+        .header-info { font-size: 13px; line-height: 1.2; }
+
+        .main-container {
+            display: grid; grid-template-columns: 1fr 320px; flex: 1; overflow: hidden;
+            width: 100%;
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        .question-area {
+            padding: 40px; overflow-y: auto; background: white; border-right: 1px solid var(--border);
+        }
+
+        .sidebar {
+            padding: 20px; background: #fff; display: flex; flex-direction: column;
+        }
+
+        .q-tag { font-size: 12px; font-weight: bold; color: #7f8c8d; margin-bottom: 5px; }
+        .q-text { font-size: 1.3rem; font-weight: 600; margin-bottom: 30px; }
+
+        .option-item {
+            border: 1px solid var(--border); padding: 15px; margin-bottom: 12px;
+            cursor: pointer; transition: 0.2s; border-radius: 4px; display: flex; align-items: center;
+        }
+        .option-item:hover { background: #f9f9f9; }
+        .option-item.selected { background: #eee; border: 2px solid var(--primary); font-weight: bold; }
+
+        /* Palette */
+        .palette {
+            display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 15px;
+        }
+        .pal-btn {
+            width: 100%; aspect-ratio: 1; border: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 13px; font-weight: bold;
+        }
+        .pal-btn.answered { background: var(--primary); color: white; }
+        .pal-btn.current { border: 2px solid var(--primary); background: #eee; }
+
+        .controls {
+            display: flex; justify-content: space-between; margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee;
+        }
+
+        /* Result Area */
+        #result-screen {
+            display: none; padding: 50px; max-width: 1000px; margin: auto;
+        }
+        .score-box {
+            text-align: center; padding: 30px; background: white; border: 2px solid black; margin-bottom: 30px;
+        }
+        .ans-table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
+        .ans-table th, .ans-table td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        .ans-table th { background: #000; color: #fff; }
+
+        .timer { font-size: 1.5rem; font-weight: bold; font-family: monospace; }
+
+        .tech-req {
+            text-align: left; font-size: 11px; margin-top: 15px; color: #555; border-top: 1px dashed #ccc; padding-top: 10px;
+        }
+
+        @media (max-width: 800px) {
+            .main-container { 
+                grid-template-columns: 1fr; 
+                height: auto;
+                width: 100%;
+                max-width: none;
+            }
+            .sidebar { 
+                border-top: 1px solid var(--border);
+                max-height: 40vh;
+                overflow-y: auto;
+                order: 2; /* Ensure sidebar comes after question area */
+            }
+            .question-area {
+                padding: 20px;
+                order: 1;
+                min-height: 60vh;
+            }
+            .palette {
+                grid-template-columns: repeat(4, 1fr); /* Fewer columns for larger buttons on mobile */
+                gap: 5px;
+            }
+            .pal-btn {
+                font-size: 12px;
+                min-width: 40px; /* Ensure buttons aren't too small */
+            }
+            header {
+                padding: 10px 15px;
+                flex-wrap: wrap;
+                gap: 10px;
+                justify-content: space-between;
+            }
+            .header-info {
+                font-size: 12px;
+                order: 1;
+            }
+            .timer {
+                order: 2;
+                font-size: 1.2rem;
+            }
+            #result-screen {
+                padding: 20px;
+            }
+            .ans-table {
+                font-size: 12px;
+                overflow-x: auto;
+                display: block;
+                white-space: nowrap;
+            }
+            .ans-table th, .ans-table td {
+                padding: 8px 4px;
+                min-width: 80px;
+            }
+            .login-card {
+                padding: 20px;
+                margin: 10px;
+            }
+            .controls {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .btn {
+                width: 100%;
+            }
+            .tech-req {
+                font-size: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="login-screen">
+        <div class="login-card">
+            <h1 style="letter-spacing: 2px; margin-bottom: 5px;">IPDC-2 CBT</h1>
+            <p style="color: #333; font-weight: bold; font-size: 15px;">Integrated Personality Development Course</p>
+            <p style="color: #666; font-size: 13px; margin-bottom: 15px;">Subject Code: 3160003</p>
+            
+            <div class="dev-credit">Created by: Patel Divyang</div>
+
+            <input type="text" id="user-name" placeholder="Enter Full Name" required>
+            
+            <div style="text-align: left; font-size: 13px; margin-bottom: 20px; background: #f9f9f9; padding: 15px; border-left: 4px solid black;">
+                <strong>Exam Overview:</strong><br>
+                • Duration: 90 Minutes<br>
+                • Total Marks: 70<br>
+                • Questions: 40 MCQs<br>
+                • Passing: 23 Marks
+            </div>
+
+            <button class="btn btn-black" onclick="startExam()">LOGIN & START TEST</button>
+
+            <div class="tech-req">
+                <strong>Technical Requirements:</strong><br>
+                • Optimized for Mobile & Desktop.<br>
+                • Do not refresh or close the browser during the exam.
+            </div>
+        </div>
+    </div>
+
+    <div id="exam-screen">
+        <header>
+            <div class="header-info">
+                <div id="user-display" style="font-weight: bold; font-size: 1.1rem;">Candidate: ---</div>
+                <div>IPDC-2 (3160003) | GTU CBT Portal</div>
+            </div>
+            <div class="timer" id="timer">90:00</div>
+            <button class="btn" style="background: white; color: black; padding: 5px 15px;" onclick="confirmSubmission()">SUBMIT TEST</button>
+        </header>
+
+        <div class="main-container">
+            <div class="question-area">
+                <div class="q-tag" id="q-meta">SECTION A | 1 MARK</div>
+                <div class="q-text" id="q-body">Loading question...</div>
+                <div id="options-box"></div>
+
+                <div class="controls">
+                    <button class="btn" id="prev-btn" onclick="goPrev()" style="border: 1px solid #000;">PREVIOUS</button>
+                    <button class="btn" onclick="clearAns()" style="border: 1px solid #000;">CLEAR RESPONSE</button>
+                    <button class="btn btn-black" id="next-btn" onclick="goNext()">SAVE & NEXT</button>
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <h3 style="font-size: 0.9rem; margin-bottom: 10px; border-bottom: 2px solid black;">QUESTION PALETTE</h3>
+                <div class="palette" id="palette-box"></div>
+                <div style="margin-top: auto; font-size: 12px; padding: 10px; background: #f0f0f0;">
+                    <div style="margin-bottom: 5px;"><span style="display:inline-block; width:12px; height:12px; background:black;"></span> Answered</div>
+                    <div><span style="display:inline-block; width:12px; height:12px; border:1px solid #999; background: white;"></span> Not Answered</div>
+                    <div style="margin-top: 10px; font-style: italic;">Created by Patel Divyang</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="result-screen">
+        <div class="score-box">
+            <h2>EXAMINATION RESULT</h2>
+            <p>Subject: Integrated Personality Development Course (3160003)</p>
+            <div style="font-size: 3rem; font-weight: 900; margin: 15px 0;" id="final-score">0 / 70</div>
+            <p id="stats-summary">Correct: 0 | Incorrect: 0 | Skipped: 0</p>
+            <p id="pass-status" style="font-weight: bold; margin-top: 10px;"></p>
+            <button class="btn btn-black" onclick="downloadResults()" style="margin-top: 20px; width: auto; padding: 10px 20px;">DOWNLOAD RESULT</button>
+        </div>
+
+        <h3>Detailed Review</h3>
+        <table class="ans-table" id="review-table">
+            <thead>
+                <tr>
+                    <th>Q#</th>
+                    <th>Question</th>
+                    <th>Correct Answer</th>
+                    <th>Your Choice</th>
+                    <th>Result</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        <div style="display: flex; gap: 10px; justify-content: center; margin-top: 30px;">
+            <button class="btn btn-black" onclick="location.reload()">RETAKE TEST</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            // Section A (1 Mark each)
+            { text: "When you live a life without any direction, you will not move far in any one direction.", options: ["True", "False"], ans: 0, m: 1, s: "A" },
+            { text: "To achieve your long-term goals, you need to create smaller short-term goals.", options: ["True", "False"], ans: 0, m: 1, s: "A" },
+            { text: "The more you visualize your long-term goals, the fewer chances there are of achieving them.", options: ["True", "False"], ans: 1, m: 1, s: "A" },
+            { text: "Short term goals should be time-bound.", options: ["True", "False"], ans: 0, m: 1, s: "A" },
+            { text: "Clear goals will give our lives a clear direction.", options: ["True", "False"], ans: 0, m: 1, s: "A" },
+            { text: "There is no risk of addiction when smoking cigarettes occasionally.", options: ["True", "False"], ans: 1, m: 1, s: "A" },
+            { text: "Drinking alcohol is only harmful to the health of the elderly but not to the youth.", options: ["True", "False"], ans: 1, m: 1, s: "A" },
+            { text: "Seva should be performed with the expectation of a reward.", options: ["True", "False"], ans: 1, m: 1, s: "A" },
+            { text: "Whatever happens, happens for the best.", options: ["True", "False"], ans: 0, m: 1, s: "A" },
+            { text: "Stress is a physical reaction to a mental state.", options: ["True", "False"], ans: 0, m: 1, s: "A" },
+
+            // Section B (2 Marks each)
+            { text: "What is the meaning of 'begin with the end in mind'?", options: ["You should end the task while remembering the start point", "You should envision where you want to be in future and structure your life now to give direction to reach your goal", "You should begin the task and later plan to end it depending on your initial progress", "You should imagine how you want to begin the task before starting"], ans: 1, m: 2, s: "B" },
+            { text: "What does 'S' stand for in SMART goals?", options: ["Standard", "Specific", "Simple", "Super"], ans: 1, m: 2, s: "B" },
+            { text: "According to IPDC, how many smokers started before age 18?", options: ["3 out of 10", "5 out of 10", "7 out of 10", "9 out of 10"], ans: 3, m: 2, s: "B" },
+            { text: "How does the 'cool factor play a role in recreational drugs (cigarettes or alcohol)?", options: ["One will borrow money from their family to buy recreational drugs", "One will use recreational drugs out of curiosity", "One will start to use recreational drugs to improve concentration levels", "One will use recreational drugs because of the belief that it improves one’s social status"], ans: 3, m: 2, s: "B" },
+            { text: "Which of the following seva did the journalist, Carl Joss, NOT perform during the relief work of the Gujarat earthquake?", options: ["Cutting vegetables", "Serving Food", "Donating money", "Driving the ambulance"], ans: 3, m: 2, s: "B" },
+            { text: " Which of the following is NOT a characteristic of a good team player?", options: ["Selflessness", "Respect", "Half-heartedness", "Adaptability"], ans: 2, m: 2, s: "B" },
+            { text: "What was the first thing that Pramukh Swami Maharaj did, after being appointed as the president of BAPS, in 1950?", options: ["Take a selfie", "Delegate work to people", "Wash dishes and utensils", "Travel overseas"], ans: 2, m: 2, s: "B" },
+            { text: "Mahadev Desai served as secretary for 25 years to:", options: ["Sardar Patel", "Mahatma Gandhi", "Nehru", "Subhash Bose"], ans: 1, m: 2, s: "B" },
+            { text: "__is to complete a required task or fulfil an obligation, before or at a previously decided time.", options: ["Honesty", "Loyalty", "Punctuality", "Courage"], ans: 2, m: 2, s: "B" },
+            { text: "Which one of the following famous personalities received a cancer diagnosis from which they learnt to understand life as finite and encouraged them to create the most iconic technological advantages in the 21st century? ", options: ["Bill Gates ", "Steve Jobs ", "Sundar Pichai ", "Mark Zuckerberg"], ans: 1, m: 2, s: "B" },
+            { text: "Forgiveness is an act of the:", options: ["Weak", "Fearful", "Courageous", "Angry"], ans: 2, m: 2, s: "B" },
+            { text: " Norgay and Hillary were able to successfully climb Mount Everest. What factor allowed them to do this while their predecessors (previous climbers) could not?", options: ["They took permission of the government ", "They were experienced in mountaineering", "They were part of a team that worked selflessly", "There was no disappointment in their team "], ans: 2, m: 2, s: "B" },
+            { text: "Purchasing a smartphone is most likely to be which type of financial goal?", options: ["Short-term", "Mid-term", "Maximization", "Strategic "], ans: 0, m: 2, s: "B" },
+            { text: "Which of the following is the least likely reason for the formation of drug addiction?", options: ["Peer pressure ", "The search for an escape from stress ", "Curiosity ", "The desire to form an addiction "], ans: 3, m: 2, s: "B" },
+            { text: " According to the workbook, which of the following is NOT part of the process of forgiving?", options: ["Consider why you want to forgive this person ", "Choose to forgive", "Think of the person's flaws and share them with others ", "When in doubt, take your time"], ans: 2, m: 2, s: "B" },
+
+            // Section C (2 Marks each) - Updated Questions 26-40
+            { text: "Amit is a very bright student. He wants to be an engineer and get an entry in the best company of his field. He has just received admission into the engineering institute that he desired, now what should Amit follow:", options: ["Amit should try to settle down into the new atmosphere, observe what others are doing and should follow in their footsteps.", "Amit should define some short-term goals that will help get entry into the company of his choice"], ans: 1, m: 2, s: "C" },
+            { text: "Rajesh has cleared his 12th standard exam with good grades. He is confused about the selection of his degree course. What should Rajesh do?", options: ["He should seek some advice in choosing a course that is relevant to his prospective career choice.", "He should select the course that is most popular with his friends and other students"], ans: 0, m: 2, s: "C" },
+            { text: "Anjali is an average Student. She has set a clear long-term goal to join the Civil Services. With the help from experts, she has set some short-term goals too, but she is struggling to achieve them. What should she do?", options: ["Anjali should change her long-term goal to something easier", "Anjali should create a daily routine that will help her achieve her short-term targets"], ans: 1, m: 2, s: "C" },
+            { text: "Neel’s friend encourages him to smoke some cigarettes because he believes that ‘there is no harm in trying it once’. Why should Neel decline his friend’s offer to smoke?", options: ["Smoking is harmful and can become addictive.", "Smoking can be an unpleasant experience for beginners."], ans: 0, m: 2, s: "C" },
+            { text: "Sejal often gets stressed because she has financial difficulties. She is also addicted to cigarettes, smoking 15 cigarettes daily. She refuses to stop smoking because she says that it helps control her stress. Do you think it is beneficial for her to stop smoking?", options: ["Yes. Spending money on cigarettes is wasting her money. If she can be strong and give up her addiction, then this will be more beneficial in the long term.", "No. By trying to stop smoking she will get more stressed. Which will only make her situation worse."], ans: 0, m: 2, s: "C" },
+            { text: "The local community has organised a one-day cleanup event. The organisers have invited the local minister alongside sixty members of the community to clean all the trash in the village river. The local media has been asked to attend the event to record and publicise the good efforts of the minister and community. However, the media has not confirmed their invitation and so their attendance cannot be guaranteed. Upon hearing this, the minister is considering whether to attend the event or not, what would you advise him?", options: ["You should request the organisers to postpone the event until the media guarantees their attendance.", "You should attend the event even if the media does not attend because it is a good cause."], ans: 1, m: 2, s: "C" },
+            { text: "Sanjay is part of a district football team. So far, he has played a crucial role in getting his team to the finals of the state championship. Today, Sanjay has been scheduled to play in the final match, but Sanjay's back has started hurting in a way that affects his performance. Help him decide what advice he should take from the options below.", options: ["Do not tell anyone and play the match even with the chance that your performance might get impacted. If you do not play the match, you might not get the recognition you deserve.", "Alert your coach about it, even if that means he may not let you play in the match. It is better to do what is best for the team even if it means missing out on a big opportunity."], ans: 1, m: 2, s: "C" },
+            { text: "Manan is an intelligent college student. But he often gets late to class, and he rarely submits the assignments on time. His professor is new at his role and has not noticed Manan's absences. What should Manan do?", options: ["Manan can maintain his lifestyle but should also stay aware such that his grades do not suffer as a result.", "He should become more punctual in his attendance and submissions."], ans: 1, m: 2, s: "C" },
+            { text: "What is the closest interpretation of the following quote: \"‘Small things make perfection, but perfection is not a small thing’?'\"", options: ["Try to bring perfection into the small tasks of your day-to-day life. Perfection in small tasks drives our life to perfection.", "Perfection is very important for your career. Bring perfection into your important tasks as a student or as a professional."], ans: 0, m: 2, s: "C" },
+            { text: "Archana is a software engineer. She likes to work on program designing and coding. But she does not like to do the supporting documentation work. She finds it unimportant as it is not normally used by anyone. It needs to be done to adhere to the general organization standards. What should Archana do?", options: ["Complete the documentation work by noting down only the biggest details. The supporting document feels unimportant and is unlikely to be used anyway.", "Complete the documentation work sincerely. Follow the organization guidelines to specify the details. Even if it seems unimportant, she should be sincere in completing her work."], ans: 1, m: 2, s: "C" },
+            { text: "Every morning Steve Jobs asked himself: \"If today was the last day of my life, would I want to do what I am about to do today?\" From the following two statements, pick that which you think best explains Jobs' quote.", options: ["Jobs wanted to remind himself of what is most important in his life and to continue working in that direction.", "Jobs wanted to focus more on achieving short term benefits instead of making long term investments."], ans: 0, m: 2, s: "C" },
+            { text: "\"Death teaches about life.\" Which of the following statements best explains the importance of this quotation?", options: ["We should accept that everything has an ending point.", "Realizing our life as finite can improve our productivity, clarity, and stability."], ans: 1, m: 2, s: "C" },
+            { text: "Anamika and Aditi are friends. But Aditi forgot to invite Anamika to her birthday celebration. Anamika felt upset that she was left out. A few weeks later, Anamika's birthday anniversary is now soon approaching, and she is planning her birthday celebration. What should Anamika do?", options: ["Invite Aditi to her birthday celebration. This will make Aditi realise her mistake and more likely to apologise.", "Invite Aditi to her birthday celebration and bridge the gap in their friendship."], ans: 1, m: 2, s: "C" },
+            { text: "Avinash stays in a hostel. Raj is his roommate. Raj is very notorious and has a habit of mocking everyone most of the time. After a few months, Raj stopped teasing Avinash. But Avinash has started to hate Raj because of his nature. He gets disturbed just by looking at Raj. What should Avinash do to feel more positive?", options: ["Change rooms and avoid speaking to Raj. That way he cannot ruin his mood.", "Try and forgive Raj for his mocking nature. Focus on his positive qualities instead."], ans: 1, m: 2, s: "C" },
+            { text: "‘Resentment is like drinking poison and then hoping it will kill your enemies.’ - What is the most useful lesson to learn from this famous quote by Nelson Mandela?", options: ["Keeping bitter emotions for those who have hurt us will only prove to be self-destructive. So, we should learn to forgive others for our own peace of mind.", "Keeping bitter emotions for your enemies is unlikely to inflict harm on them. It is better to act upon it instead."], ans: 0, m: 2, s: "C" }
+        ];
+
+        let currentIdx = 0;
+        let responses = new Array(questions.length).fill(null);
+        let timeRemaining = 5400; // 90 mins
+        let timerTicker;
+        let userName;
+        let finalScore;
+        let passStatusText;
+        const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbz4FnsWZTuOjNpIf1St9MJIFPLf9r0Y0UxKmBfQqQ62pYzChest4MT6Pk-NXxDyI4CqLQ/exec";
+
+        function startExam() {
+            const name = document.getElementById('user-name').value;
+            if(!name) { alert("Please enter your name."); return; }
+            userName = name;
+            document.getElementById('user-display').innerText = "Candidate: " + name;
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('exam-screen').style.display = 'flex';
+            
+            initPalette();
+            loadQuestion(0);
+            startTimer();
+        }
+
+        function initPalette() {
+            const box = document.getElementById('palette-box');
+            box.innerHTML = '';
+            questions.forEach((q, i) => {
+                const b = document.createElement('div');
+                b.className = 'pal-btn';
+                b.id = `pbtn-${i}`;
+                b.innerText = i + 1;
+                b.onclick = () => loadQuestion(i);
+                box.appendChild(b);
+            });
+        }
+
+        function loadQuestion(idx) {
+            currentIdx = idx;
+            const q = questions[idx];
+            document.getElementById('q-meta').innerText = `SECTION ${q.s} | ${q.m} MARK(S)`;
+            document.getElementById('q-body').innerText = `${idx + 1}. ${q.text}`;
+            
+            const optBox = document.getElementById('options-box');
+            optBox.innerHTML = '';
+            q.options.forEach((opt, i) => {
+                const div = document.createElement('div');
+                div.className = `option-item ${responses[idx] === i ? 'selected' : ''}`;
+                div.innerHTML = `<span style="margin-right:15px; font-weight:bold;">${String.fromCharCode(65+i)}.</span> ${opt}`;
+                div.onclick = () => pickOption(i);
+                optBox.appendChild(div);
+            });
+
+            // Update palette highlights
+            document.querySelectorAll('.pal-btn').forEach(b => b.classList.remove('current'));
+            const currentPal = document.getElementById(`pbtn-${idx}`);
+            if(currentPal) currentPal.classList.add('current');
+            
+            // Buttons
+            document.getElementById('prev-btn').disabled = (idx === 0);
+            document.getElementById('next-btn').innerText = (idx === questions.length - 1) ? "FINISH TEST" : "SAVE & NEXT";
+        }
+
+        function pickOption(i) {
+            responses[currentIdx] = i;
+            document.getElementById(`pbtn-${currentIdx}`).classList.add('answered');
+            loadQuestion(currentIdx);
+        }
+
+        function clearAns() {
+            responses[currentIdx] = null;
+            document.getElementById(`pbtn-${currentIdx}`).classList.remove('answered');
+            loadQuestion(currentIdx);
+        }
+
+        function goNext() {
+            if(currentIdx < questions.length - 1) {
+                loadQuestion(currentIdx + 1);
+            } else {
+                confirmSubmission();
+            }
+        }
+
+        function goPrev() {
+            if(currentIdx > 0) loadQuestion(currentIdx - 1);
+        }
+
+        function startTimer() {
+            timerTicker = setInterval(() => {
+                timeRemaining--;
+                let m = Math.floor(timeRemaining / 60);
+                let s = timeRemaining % 60;
+                document.getElementById('timer').innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+                if(timeRemaining <= 0) {
+                    clearInterval(timerTicker);
+                    processResults();
+                }
+            }, 1000);
+        }
+
+        function confirmSubmission() {
+            const answered = responses.filter(r => r !== null).length;
+            if(confirm(`You have answered ${answered} / ${questions.length} questions. Submit now?`)) {
+                processResults();
+saveResultToSheet();
+            }
+        }
+
+        function processResults() {
+            clearInterval(timerTicker);
+            document.getElementById('exam-screen').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'block';
+
+            let totalObtained = 0;
+            let correct = 0;
+            let wrong = 0;
+            let skipped = 0;
+            const tbody = document.querySelector('#review-table tbody');
+            tbody.innerHTML = '';
+
+            questions.forEach((q, i) => {
+                const u = responses[i];
+                const isCorrect = u === q.ans;
+                if(u === null) skipped++;
+                else if(isCorrect) { correct++; totalObtained += q.m; }
+                else wrong++;
+
+                const row = `<tr>
+                    <td>${i+1}</td>
+                    <td>${q.text.substring(0, 50)}...</td>
+                    <td style="background:#e8f5e9">${q.options[q.ans]}</td>
+                    <td style="background:${u === null ? '#fff' : (isCorrect ? '#e8f5e9' : '#ffebee')}">${u !== null ? q.options[u] : 'Skipped'}</td>
+                    <td style="color:${isCorrect ? 'green' : 'red'}; font-weight:bold">${isCorrect ? '✔' : '✘'}</td>
+                </tr>`;
+                tbody.innerHTML += row;
+            });
+
+            finalScore = totalObtained;
+            document.getElementById('final-score').innerText = `${totalObtained} / 70`;
+            document.getElementById('stats-summary').innerText = `Correct: ${correct} | Incorrect: ${wrong} | Skipped: ${skipped}`;
+            
+            const passStatus = document.getElementById('pass-status');
+            if(totalObtained >= 23) {
+                passStatus.innerText = "STATUS: PASSED";
+                passStatus.style.color = "green";
+                passStatusText = "PASSED";
+            } else {
+                passStatus.innerText = "STATUS: FAILED (Passing marks: 23)";
+                passStatus.style.color = "red";
+                passStatusText = "FAILED";
+            }
+            
+            window.scrollTo(0,0);
+        }
+
+        function downloadResults() {
+            if (!userName || finalScore === undefined) {
+                alert("Results not available. Please complete the test first.");
+                return;
+            }
+
+            // Create canvas
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 800;
+            canvas.height = 400;
+
+            // Background
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Border
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 5;
+            ctx.strokeRect(5, 5, canvas.width - 10, canvas.height - 10);
+
+            // Title
+            ctx.fillStyle = '#000000';
+            ctx.font = 'bold 36px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('IPDC-2 EXAM RESULT', canvas.width / 2, 80);
+
+            // Subject
+            ctx.font = 'bold 20px Arial';
+            ctx.fillText('Integrated Personality Development Course (3160003)', canvas.width / 2, 120);
+
+            // Candidate Name
+            ctx.font = 'bold 24px Arial';
+            ctx.fillText('Candidate: ' + userName, canvas.width / 2, 170);
+
+            // Score
+            ctx.font = 'bold 48px Arial';
+            ctx.fillText(finalScore + ' / 70', canvas.width / 2, 240);
+
+            // Status
+            ctx.font = 'bold 28px Arial';
+            const statusColor = passStatusText === 'PASSED' ? '#27ae60' : '#c0392b';
+            ctx.fillStyle = statusColor;
+            ctx.fillText('Status: ' + passStatusText, canvas.width / 2, 300);
+
+            // Convert to JPEG
+            const dataURL = canvas.toDataURL('image/jpeg', 0.9);
+
+            // Download
+            const link = document.createElement('a');
+            link.download = userName + '_IPDC2_Result.jpg';
+            link.href = dataURL;
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+function saveResultToSheet() {
+  const timeTaken = 5400 - timeRemaining; // seconds
+  fetch(GOOGLE_SHEET_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      name: userName,
+      score: finalScore,
+      total: 70,
+      time: timeTaken,
+      status: passStatusText
+    })
+  }).catch(err => console.error("Sheet save error", err));
+}
+    </script>
+</body>
+</html>
